@@ -8,7 +8,8 @@ export class StoryRepository {
     this.db = db;
   }
 
-  async createStory(story) {
+  async createStory(story: Story) {
+    console.log({ story })
     return await StoryModel.create(this.db, story);
   }
 

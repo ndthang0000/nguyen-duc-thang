@@ -5,6 +5,7 @@ import httpStatus from 'http-status';
 import { errorConverter, errorHandler } from './infrastructure/exception/error.handler';
 import configData from './infrastructure/config';
 import morganMiddleware from './infrastructure/logging/morgan';
+import helmet from 'helmet';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -13,6 +14,15 @@ if (configData.env !== 'test') {
   app.use(morganMiddleware.successHandler);
   app.use(morganMiddleware.errorHandler);
 }
+
+// set security HTTP headers
+app.use(helmet());
+
+// parse json request body
+app.use(express.json());
+
+// parse urlencoded request body
+app.use(express.urlencoded({ extended: true }));
 
 app.use('/v1/api', router);
 
