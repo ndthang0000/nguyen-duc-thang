@@ -9,7 +9,6 @@ export class StoryRepository {
   }
 
   async createStory(story: Story) {
-    console.log({ story })
     return await StoryModel.create(this.db, story);
   }
 
@@ -40,5 +39,9 @@ export class StoryRepository {
       limit,
       totalPages: Math.ceil(count.count / limit)
     };
+  }
+
+  async patchStory(id, partialUpdate) {
+    return await StoryModel.patch(this.db, id, partialUpdate);
   }
 }

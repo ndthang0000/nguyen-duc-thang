@@ -4,7 +4,7 @@ import { Story } from '../../domain/entities/story.entity';
 
 export class StoryModel {
   static async create(db: Database, story: Story) {
-    await db.run(
+    return await db.run(
       `INSERT INTO stories (title, author, content, publish_at, url, thumbnail_url, short_description)
           VALUES (?, ?, ?, ?, ?, ?, ?)`,
       story.title, story.author, story.content, story.publish_at, story.url, story.thumbnail_url, story.short_description
@@ -20,7 +20,7 @@ export class StoryModel {
   }
 
   static async update(db: Database, id: number, updatedStory: Story) {
-    await db.run(
+    return await db.run(
       `UPDATE stories SET
               title = ?,
               author = ?,
@@ -43,6 +43,15 @@ export class StoryModel {
   }
 
   static async delete(db: Database, id: number) {
-    await db.run('DELETE FROM stories WHERE id = ?', id);
+    return await db.run('DELETE FROM stories WHERE id = ?', id);
+  }
+  static async patch(db: Database, id: number, partialStory: Partial<Story>) {
+    const fields = Object.keys(partialStory).map(key => `${key} = ?`).join(', ');
+    const values = Object.values(partialStory);
+    return await db.run(
+      `UPDATE stories SET ${fields}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      ...values,
+      id
+    );
   }
 }

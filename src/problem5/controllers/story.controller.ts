@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { StoryRepository } from '../infrastructure/repository/story.repository';
 import { initDb } from '../infrastructure/database/connect';
 import { Database } from 'sqlite';
+import status from 'http-status';
 
 export class StoryController {
   private _storyRepo!: StoryRepository;
@@ -13,7 +14,7 @@ export class StoryController {
     this.getStoryById = this.getStoryById.bind(this);
     this.updateStory = this.updateStory.bind(this);
     this.deleteStory = this.deleteStory.bind(this);
-
+    this.patchStory = this.patchStory.bind(this);
   }
 
   public static async createInstance(): Promise<StoryController> {
@@ -23,8 +24,12 @@ export class StoryController {
 
   public async createStory(req: Request, res: Response): Promise<void> {
     try {
-      const story = await this._storyRepo.createStory(req.body);
-      res.status(201).json(story);
+      const response = await this._storyRepo.createStory(req.body);
+      if (response.changes === 0) {
+        res.status(400).json({ message: 'Error creating story' });
+        return;
+      }
+      res.status(201).json({ status: true, message: 'Story created successfully' });
     } catch (error) {
       res.status(500).json({ message: 'Error creating story', error });
     }
@@ -33,7 +38,6 @@ export class StoryController {
   async getStories(_: Request, res: Response): Promise<void> {
     try {
       // this is undefined, how to fix this?
-      console.log({ stories3332324324234234: this })
       const stories = await this._storyRepo.getStories();
       res.status(200).json(stories);
     } catch (error) {
@@ -46,7 +50,7 @@ export class StoryController {
     try {
       const story = await this._storyRepo.getStoryById(req.params.id);
       if (story) {
-        res.status(200).json(story);
+        res.status(200).json({ status: true, data: story });
       } else {
         res.status(404).json({ message: 'Story not found' });
       }
@@ -58,8 +62,8 @@ export class StoryController {
   public async updateStory(req: Request, res: Response): Promise<void> {
     try {
       const updatedStory = await this._storyRepo.updateStory(req.params.id, req.body) as any;
-      if (updatedStory) {
-        res.status(200).json(updatedStory);
+      if (updatedStory.changes === 1) {
+        res.status(200).json({ status: true, message: 'Story updated successfully' });
       } else {
         res.status(404).json({ message: 'Story not found' });
       }
@@ -71,13 +75,27 @@ export class StoryController {
   public async deleteStory(req: Request, res: Response): Promise<void> {
     try {
       const deleted = await this._storyRepo.deleteStory(req.params.id) as any;
-      if (deleted) {
+      if (deleted.changes === 1) {
         res.status(204).send();
       } else {
         res.status(404).json({ message: 'Story not found' });
       }
     } catch (error) {
       res.status(500).json({ message: 'Error deleting story', error });
+    }
+  }
+
+  public async patchStory(req: Request, res: Response): Promise<void> {
+    try {
+      const patchedStory = await this._storyRepo.patchStory(req.params.id, req.body) as any;
+      if (patchedStory.changes === 1) {
+        res.status(200).json({ status: true, message: 'Story patched successfully' });
+      } else {
+        res.status(404).json({ message: 'Story not found' });
+      }
+    } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: 'Error patching story', error });
     }
   }
 }
