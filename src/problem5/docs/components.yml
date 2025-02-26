@@ -1,0 +1,89 @@
+components:
+  schemas:
+    Story:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        author:
+          type: string
+        content:
+          type: string
+        create_at:
+          type: string
+          format: date-time
+        update_at:
+          type: string
+          format: date-time
+        publish_at:
+          type: date-time
+        url:
+          type: string
+        thumbnail_url:
+          type: string
+        short_description:
+          type: string
+      example:
+        id: 7
+        title: 'Become a good citizen'
+        author: 'Thang Nguyen'
+        content: ' dfgd fdgdfg  gj 45 h f sdsdfdfgfh fhgfh fsfs fsdfsd sdfsdffsdfsd'
+        created_at: '2025-02-26 15:11:30'
+        updated_at: '2025-02-26 16:08:30'
+        publish_at: 1672531200000
+        url: 'http://localhost:3000/blog/4'
+        thumbnail_url: 'http://localhost:3000/anhdepp3.png'
+        short_description: 'This is a description'
+    Error:
+      type: object
+      properties:
+        code:
+          type: number
+        message:
+          type: string
+
+  responses:
+    DuplicateEmail:
+      description: Email already taken
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: 400
+            message: Email already taken
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: 401
+            message: Please authenticate
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: 403
+            message: Forbidden
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: 404
+            message: Not found
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

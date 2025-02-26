@@ -26,10 +26,6 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use('/v1/api', router)
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
-
 app.use((req, res, next) => {
   next(new ApiError(httpStatus.NOT_FOUND, 'Not found'))
 })
@@ -42,4 +38,5 @@ app.use(errorHandler)
 
 app.listen(port, () => {
   console.log(`🚀 Server is running on http://localhost:${port}`)
+  console.log(`🚀 Docs Swagger is running on http://localhost:${port}/v1/api/docs`)
 })
