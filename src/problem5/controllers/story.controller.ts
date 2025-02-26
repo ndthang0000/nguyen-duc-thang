@@ -94,7 +94,6 @@ export class StoryController {
         res.status(404).json({ message: 'Story not found' });
       }
     } catch (error) {
-      console.log(error)
       res.status(500).json({ message: 'Error patching story', error });
     }
   }
@@ -107,7 +106,6 @@ export class StoryController {
       const stories = await this._storyRepo.paginateStories(cleanObject({ author, title, content }), { offset, limit, sortBy });
       res.status(200).json(stories);
     } catch (error) {
-      console.log(error)
       res.status(500).json({ message: 'Error fetching paginated stories', error });
     }
   }

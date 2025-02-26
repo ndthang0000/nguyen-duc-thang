@@ -77,7 +77,6 @@ export class StoryRepository {
     queryParams.push(limit, offset);
 
 
-    console.log(query, queryParams);
     const stories = await this.db.all(query, ...queryParams);
     const count = await this.db.get(countQuery, ...countParams);
 
