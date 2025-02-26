@@ -1,12 +1,12 @@
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+import sqlite3 from 'sqlite3'
+import { open } from 'sqlite'
 
 // Initialize the database
 export const initDb = async () => {
   const db = await open({
     filename: 'stories.db',
     driver: sqlite3.Database
-  });
+  })
 
   await db.exec(`
   CREATE TABLE IF NOT EXISTS stories (
@@ -20,8 +20,7 @@ export const initDb = async () => {
       url TEXT,
       thumbnail_url TEXT,
       short_description TEXT
-  )`);
+  )`)
 
-  return db;
-};
-
+  return db
+}

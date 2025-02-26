@@ -9,6 +9,7 @@
     "build": "rimraf ./dist && tsc && tsc-alias",
     "start": "node dist/index.js",
     "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --fix",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write ."
   },
@@ -37,6 +38,7 @@
     "http-status": "^2.1.0",
     "joi": "^17.13.3",
     "morgan": "^1.10.0",
+    "prettier": "^3.5.2",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
     "winston": "^3.17.0"
