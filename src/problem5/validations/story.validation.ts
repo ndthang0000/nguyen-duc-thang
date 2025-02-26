@@ -54,10 +54,22 @@ const patchStoryByIdValidate = {
   }),
 };
 
+const paginateValidate = {
+  query: Joi.object().keys({
+    limit: Joi.number().integer().min(1).max(100),
+    page: Joi.number().integer().min(1),
+    sortBy: Joi.string().valid('created_at:asc', 'created_at:desc', 'publish_at:asc', 'publish_at:desc', 'title:asc', 'title:desc').default('created_at:desc'),
+    title: Joi.string(),
+    author: Joi.string(),
+    content: Joi.string(),
+  }),
+};
+
 export {
   createStoryValidate,
   getStoryByIdValidate,
   putStoryByIdValidate,
   deleteStoryByIdValidate,
-  patchStoryByIdValidate
+  patchStoryByIdValidate,
+  paginateValidate
 }

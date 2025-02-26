@@ -3,6 +3,7 @@ import { StoryRepository } from '../infrastructure/repository/story.repository';
 import { initDb } from '../infrastructure/database/connect';
 import { Database } from 'sqlite';
 import status from 'http-status';
+import { cleanObject } from '../infrastructure/utils/cleanObject';
 
 export class StoryController {
   private _storyRepo!: StoryRepository;
@@ -15,6 +16,7 @@ export class StoryController {
     this.updateStory = this.updateStory.bind(this);
     this.deleteStory = this.deleteStory.bind(this);
     this.patchStory = this.patchStory.bind(this);
+    this.paginateListStory = this.paginateListStory.bind(this);
   }
 
   public static async createInstance(): Promise<StoryController> {
@@ -37,11 +39,9 @@ export class StoryController {
 
   async getStories(_: Request, res: Response): Promise<void> {
     try {
-      // this is undefined, how to fix this?
       const stories = await this._storyRepo.getStories();
       res.status(200).json(stories);
     } catch (error) {
-      console.log(error)
       res.status(500).json({ message: 'Error fetching stories', error });
     }
   }
@@ -96,6 +96,19 @@ export class StoryController {
     } catch (error) {
       console.log(error)
       res.status(500).json({ message: 'Error patching story', error });
+    }
+  }
+
+  public async paginateListStory(req: Request, res: Response): Promise<void> {
+    try {
+      const { page = 1, limit = 10, sortBy } = req.query;
+      const offset = (Number(page) - 1) * Number(limit);
+      const { author, title, content } = req.query;
+      const stories = await this._storyRepo.paginateStories(cleanObject({ author, title, content }), { offset, limit, sortBy });
+      res.status(200).json(stories);
+    } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: 'Error fetching paginated stories', error });
     }
   }
 }
