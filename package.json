@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon",
+    "problem4": "nodemon src/problem4/index.ts",
+    "problem5": "nodemon src/problem5/server.ts",
     "build": "rimraf ./dist && tsc && tsc-alias",
     "start": "node dist/index.js",
     "lint": "eslint . --ext .ts",

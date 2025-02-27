@@ -8,7 +8,8 @@ import morganMiddleware from './infrastructure/logging/morgan'
 import helmet from 'helmet'
 
 const app = express()
-const port = process.env.PORT || 3000
+
+const port = configData.port || 3000
 
 if (configData.env !== 'test') {
   app.use(morganMiddleware.successHandler)

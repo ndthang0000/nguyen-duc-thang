@@ -13,7 +13,7 @@ const errorConverter = (err: any, req: Request, res: Response, next: NextFunctio
   next(error)
 }
 
-const errorHandler = (err: ApiError, req: Request, res: Response) => {
+const errorHandler = (err: ApiError, req: Request, res: Response, next: NextFunction) => {
   let { statusCode, message } = err
   if (configData.env === 'production' && !err.isOperational) {
     statusCode = httpStatus.INTERNAL_SERVER_ERROR
@@ -32,7 +32,7 @@ const errorHandler = (err: ApiError, req: Request, res: Response) => {
     console.log(err.message)
   }
 
-  res.status(statusCode).send(response)
+  res.status(statusCode).json(response)
 }
 
 export { errorConverter, errorHandler }
