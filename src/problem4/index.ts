@@ -33,4 +33,8 @@ function sum_divide(start: number, end: number): number {
   return sum_divide(start, mid) + sum_divide(mid + 1, end)
 }
 
+console.log(sum_to_n_a(12)) // 78
+console.log(sum_to_n_b(12)) // 78;
+console.log(sum_to_n_c(12)) // 78;
+
 export { sum_to_n_a, sum_to_n_b, sum_to_n_c }
