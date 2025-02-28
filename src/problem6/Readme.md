@@ -1,7 +1,7 @@
 # Scoreboard API Module
 This module provides a backend API service for managing and updating a live scoreboard displayed on a website. It handles score updates triggered by user actions, ensures security against unauthorized modifications, and supports real-time updates for the top 10 users.
 
-
+High Traffic Handling: The system is designed to handle high traffic efficiently. Ensure over about many thoudsand request per seconds
 ## Technology Stack
 - Programming Language: Node.js & Typescript
 - Web Framework: Nestjs
@@ -12,14 +12,14 @@ This module provides a backend API service for managing and updating a live scor
 - Caching: Redis (for caching scoreboard data). Special attention to the type data ```sorted sets``` of Redis. Furthermore, Redis is also used to Adapter for multiple Socket instances to ensure exact connection between client and server because it can be scalable when have high traffic
 - Logging: Winston
 ## Architecture
-We create system microservice includes Score Service and Socket Service, Redis, RabbitMQ, MongoDB
+We create a microservice system includes Score Service and Socket Service, Redis, RabbitMQ, MongoDB
   - Score Service: handle action change score from directly user and perform action relevant data in Redis and Mongo
   - Socket Service: create connect with end user by socket.io library. Take responsibility live update leader board real time when occur changes top 10
   - Redis: Store leader board with ```sorted sets```. Store distributed connection of socket info for multiple instances of Socket Service
   - RabbitMQ: transfer message update leader board from Score Service to Socket Service when occur changes
   - MongoDB: Store User, Action, History...
 
-*Detail: view image .png in the same folder* 
+*Detail: view image live-board.drawio.png in the same folder* 
 
 ## Key Design Decisions
 - In-Memory Storage: ```sorted set``` of Redis was chosen for its speed in handling frequent read/write operations, critical for real-time score updates and leaderboard queries.
