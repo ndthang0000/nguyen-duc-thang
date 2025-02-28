@@ -1,93 +1,119 @@
 # Scoreboard API Module
 This module provides a backend API service for managing and updating a live scoreboard displayed on a website. It handles score updates triggered by user actions, ensures security against unauthorized modifications, and supports real-time updates for the top 10 users.
 
-High Traffic Handling: The system is designed to handle high traffic efficiently. Ensure over about many thoudsand request per seconds
-## Technology Stack
-- Programming Language: Node.js & Typescript
-- Web Framework: Nestjs
-- Database: MongoDB for store info such as user, history, score...
-- Real-Time Communication: Socket.io (for live scoreboard updates)
-- Authentication: JWT (JSON Web Tokens) for secure API access
-- Message Queue: Rabbit MQ (communicate in microservice)
-- Caching: Redis (for caching scoreboard data). Special attention to the type data ```sorted sets``` of Redis. Furthermore, Redis is also used to Adapter for multiple Socket instances to ensure exact connection between client and server because it can be scalable when have high traffic
-- Logging: Winston
-## Architecture
-We create a microservice system includes Score Service and Socket Service, Redis, RabbitMQ, MongoDB
-  - Score Service: handle action change score from directly user and perform action relevant data in Redis and Mongo
-  - Socket Service: create connect with end user by socket.io library. Take responsibility live update leader board real time when occur changes top 10
-  - Redis: Store leader board with ```sorted sets```. Store distributed connection of socket info for multiple instances of Socket Service
-  - RabbitMQ: transfer message update leader board from Score Service to Socket Service when occur changes
-  - MongoDB: Store User, Action, History...
+The system is designed to handle high traffic efficiently, ensuring it can process thousands of requests per second.
 
-*Detail: view image live-board.drawio.png in the same folder* 
+## Technology Stack
+- **Programming Language**: Node.js & TypeScript
+- **Web Framework**: NestJS
+- **Database**: MongoDB (for storing user info, history, scores, etc.)
+- **Real-Time Communication**: Socket.io (for live scoreboard updates)
+- **Authentication**: JWT (JSON Web Tokens) for secure API access
+- **Message Queue**: RabbitMQ (for communication in microservices)
+- **Caching**: Redis (for caching scoreboard data, using sorted sets). Redis is also used as an adapter for multiple Socket instances to ensure accurate connections between clients and servers, providing scalability for high traffic.
+- **Logging**: Winston
+
+## Architecture
+The system is a microservice architecture including Score Service, Socket Service, Redis, RabbitMQ, and MongoDB:
+- **Score Service**: Handles score changes from users and updates data in Redis and MongoDB.
+- **Socket Service**: Manages connections with end-users via Socket.io, providing real-time leaderboard updates when the top 10 changes.
+- **Redis**: Stores the leaderboard using sorted sets and manages distributed socket connections across multiple instances.
+- **RabbitMQ**: Transfers leaderboard update messages from the Score Service to the Socket Service.
+- **MongoDB**: Stores user data, actions, and history.
+
+*Detail: view image `live-board.drawio.png` in the same folder.*
+
+## Flow Execution
+
+1. Users access the website, establishing a socket connection with the server to receive top 10 user scores.
+2. When users perform actions that change scores, the requests go through the API Gateway.
+3. The API Gateway routes the request to the Score Service, where it is authorized. If successful, the user's score is updated in Redis and MongoDB. The new top 10 is calculated, and if it changes, a message is dispatched to RabbitMQ.
+4. The Socket Service receives the message and broadcasts the new top 10 to all connected clients.
+5. Clients receive the updated data and refresh the UI accordingly.
+
+*Detail: view image `live-board.flowchart.drawio.png` in the same folder.*
 
 ## Key Design Decisions
-- In-Memory Storage: ```sorted set``` of Redis was chosen for its speed in handling frequent read/write operations, critical for real-time score updates and leaderboard queries.
-- WebSocket for Real-Time Updates: Selected over polling to reduce server load and provide instant updates to the frontend.
-- JWT Authentication: Ensures secure, token-based access control for API requests, preventing unauthorized score changes.
-- Rate Limiting: Implemented to prevent abuse and ensure fair resource usage.
-- Caching: Top 10 scoreboard entries are briefly cached to reduce database strain during peak traffic.
-## Integration Points
-- Authentication Service: Relies on an external service to generate and verify JWT tokens.
-- Frontend Application: Connects via REST API for score submissions and WebSocket for real-time leaderboard updates.
-- Persistent Storage: Optionally syncs Redis data with a durable database (e.g., PostgreSQL) for backup and recovery.
-## Overview
-The Scoreboard API is a RESTful service integrated into the backend application server. It manages user scores, validates requests, and broadcasts updates to the frontend for real-time display. The service emphasizes security to prevent malicious score manipulation and scalability to handle frequent updates.
+- **Caching**: Use Redis sorted sets for leaderboard data.
+- **Redis Adapter**: Ensures synchronous connections across multiple instances for scalability.
+- **WebSocket for Real-Time Updates**: disable polling by setting ```transports: ['websocket']```  in your clients socket.io configuration or you have to enable cookie based routing in your load balancer
+- **JWT Authentication**: Provides secure, token-based access control for API requests.
+- **Rate Limiting**: Prevents abuse and ensures fair resource usage.
 
-## Endpoints
-PATCH `/api/scoreboard/update`
+## Code Implementation
 
-- **Description**: Updates a user's score after completing an authorized action.
+### 1. RESTful Endpoints
+
+#### PATCH `/api/scoreboard/update`
+- **Description**: Updates a user's score after an authorized action.
 - **Method**: PATCH
-- **Request** Body:
+- **Request Body**:
 ```json
 {
   "action": "type",
-  "scoreIncrement": "number" // Amount to increase the score by (positive integer)
+  "scoreIncrement": "number"
 }
 ```
-- **Headers:**
-Authorization: Bearer token (JWT) to validate the request.
+- **Headers**: Authorization: Bearer token (JWT)
 - **Responses**:
-200 OK: Score updated successfully.
-```json
-{
-  "userId": "string",
-  "newScore": "number",
-  "timestamp": "ISO 8601 string"
-} 
-```
-- 400 Bad Request: Invalid input (e.g., negative increment, missing fields).
-- 401 Unauthorized: Invalid or missing token.
-- 403 Forbidden: User lacks permission to update score.
-Notes:
-The scoreIncrement must be validated server-side to match the expected value for the action (e.g., 10 points per action).
-GET `/api/scoreboard/top`
-Description: Retrieves the current top 10 users and their scores.
-Method: GET
-Query Parameters: None
-Responses:
-200 OK: Returns the top 10 users.
+  - 200 OK: Score updated successfully.
+  ```json
+  {
+    "userId": "string",
+    "newScore": "number",
+    "timestamp": "ISO 8601 string"
+  }
+  ```
+  - 400 Bad Request: Invalid input.
+  - 401 Unauthorized: Invalid or missing token.
+  - 403 Forbidden: User lacks permission to update score.
+
+#### GET `/api/scoreboard/top`
+- **Description**: Retrieves the current top 10 users and their scores.
+- **Method**: GET
+- **Responses**:
+  - 200 OK: Returns the top 10 users.
+  ```json
+  [
+    { "userId": "string", "score": "number", "rank": 1 },
+    { "userId": "string", "score": "number", "rank": 2 },
+    ...
+  ]
+  ```
+
+### 2. Socket Events
+
+#### Event: `connect`
+- **Description**: Triggered when a client successfully connects to the Socket Service.
+- **Payload**: None
+
+#### Event: `disconnect`
+- **Description**: Triggered when a client disconnects from the Socket Service.
+- **Payload**: None
+
+#### Event: `updateTop10`
+- **Description**: Broadcasts the updated top 10 users to all connected clients.
+- **Payload**:
 ```json
 [
   { "userId": "string", "score": "number", "rank": "number" },
   ...
 ]
 ```
-500 Internal Server Error: Failed to retrieve scoreboard data.
-Notes:
-Scores are sorted in descending order.
-Response is cached briefly (e.g., 5 seconds) to reduce database load.
-Real-Time Updates
-Mechanism: WebSocket connection at /ws/scoreboard.
-Description: Clients connect to this endpoint to receive live updates of the top 10 scoreboard.
-Message Format:
+
+#### Event: `myScoreUpdated`
+- **Description**: Sent to a specific user when their score is updated.
+- **Payload**:
 ```json
 {
-  "event": "scoreboardUpdate",
-  "data": [
-    { "userId": "string", "score": "number", "rank": "number" },
-    ...
-  ]
+  "userId": "string",
+  "newScore": "number",
+  "timestamp": "ISO 8601 string"
 }
 ```
+
+## Note: Improving Software Quality
+- Use Helmet to filter headers and sanitize inputs to prevent HTML/SQL injection.
+- Should use cluster Redis to handle high CCU
+- To avoiding receving many message from RabbitMQ in the short time, the Socket Service should implement ```Debounce or Throttle Mechanism```
+- Divide authentication to separated service to optimize performance and scalability.
